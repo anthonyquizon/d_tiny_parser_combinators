@@ -22,6 +22,17 @@ unittest {
 }
 
 unittest {
+    auto stream = Stream("hello world!");
+    auto parser = literal("hello").map((string a) {
+        return a ~ " world!";
+    });
+
+    auto result = parser.parse(stream);
+
+    assert(result == value("hello world!"));
+}
+
+unittest {
     struct T { string a; string b; }
 
     auto stream = Stream("hello world!");
@@ -53,6 +64,24 @@ unittest {
     assert(result == value(T('<', "hello", '>')));
 }
 
+unittest {
+    struct T { 
+        char a; 
+        string label; 
+        char b; 
+    }
+
+    auto stream = Stream("<hello world!>");
+    auto parser = sequence!T( 
+        token('<'),
+        literal("hello"),
+        token('>')
+    ).map();
+
+    auto result = parser.parse(stream);
+
+    assert(result == value(T('<', "hello", '>')));
+}
 void main() {
 }
 

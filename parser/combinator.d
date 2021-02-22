@@ -10,10 +10,6 @@ import R = parser.result
     , value
     , _;
 
-import parser.atom 
-    : token
-    , literal;
-
 
 Parser!T try_parser(T)(Parser!T parser) {
     return Parser!T((ref Stream stream) {
@@ -36,6 +32,25 @@ Parser!T try_parser(T)(Parser!T parser) {
     });
 }
 
+Parser!T sequence(T, A)(
+    Parser!A a,
+) {
+    return try_parser(a.bind((A a_out) {
+        return P.lift(T(a_out, b_out));
+    }));
+}
+
+Parser!T sequence(T, A, B)(
+    Parser!A a, 
+    Parser!B b, 
+) {
+    return try_parser(a.bind((A a_out) {
+        return b.bind((B b_out) {
+            return P.lift(T(a_out, b_out));
+        });
+    }));
+}
+
 Parser!T sequence(T, A, B, C)(
     Parser!A a, 
     Parser!B b, 
@@ -45,6 +60,43 @@ Parser!T sequence(T, A, B, C)(
         return b.bind((B b_out) {
             return c.bind((C c_out) {
                 return P.lift(T(a_out, b_out, c_out));
+            });
+        });
+    }));
+}
+
+Parser!T sequence(T, A, B, C, D)(
+    Parser!A a, 
+    Parser!B b, 
+    Parser!C c,
+    Parser!D d
+) {
+    return try_parser(a.bind((A a_out) {
+        return b.bind((B b_out) {
+            return c.bind((C c_out) {
+                return d.bind((D d_out) {
+                    return P.lift(T(a_out, b_out, c_out, d_out));
+                });
+            });
+        });
+    }));
+}
+
+Parser!T sequence(T, A, B, C, D, E)(
+    Parser!A a, 
+    Parser!B b, 
+    Parser!C c,
+    Parser!D d,
+    Parser!E e
+) {
+    return try_parser(a.bind((A a_out) {
+        return b.bind((B b_out) {
+            return c.bind((C c_out) {
+                return d.bind((D d_out) {
+                    return e.bind((E e_out) {
+                        return P.lift(T(a_out, b_out, c_out, d_out, e_out));
+                    });
+                });
             });
         });
     }));
@@ -128,13 +180,13 @@ Parser!T sequence(T, A, B, C)(
     //});
 //}
 
-//Parser!U map(T, U)(Parser!T parser, U delegate(T) f) { 
-    //return parser.bind!(T, U)((T t) {
-        //auto value = f(t);
+Parser!U map(T, U)(Parser!T parser, U delegate(T) f) { 
+    return parser.bind!(T, U)((T t) {
+        auto value = f(t);
 
-        //return R.lift!U(value);
-    //});
-//}
+        return P.lift(value);
+    });
+}
 
 Parser!U bind(T, U)(Parser!T parser, Parser!U delegate(T) f) { 
     return Parser!U((ref Stream stream) {
